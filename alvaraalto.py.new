@@ -1,13 +1,10 @@
-#TODO#
-#If text "!roll" roll from 1-100: couldn't fix#
-
-
-
-
-#setup#
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot
+
+# Get client secret as an argument
+import sys
+client_secret = sys.argv[1]
 
 import random
 from random import choice
@@ -89,7 +86,7 @@ async def ping(context):
     await context.send("Taasko kaatu puu ja veti sähköt? Ping: {:d}".format(round(client.latency * 1000)))
 
 @client.command(name = "roll", help = "1-x random number generator. Remember to include anything after the !roll part (for example, !roll k). If x has words/non-numerals, default to 1-100.")
-async def roll(context, numeroa):
+async def roll(context, numeroa=100):
     try:
         loppu = int(numeroa)
         await context.send(round(random.uniform(1, loppu)))
@@ -113,12 +110,14 @@ async def reaction_role_creation_commands(context):
     await context.send(embed = mbed)
     await context.message.delete()
 
+
 @client.command(name = "reaction_set_title", help = "Admin command")
 async def reaction_set_title(context, new_title):
     global reaction_title
     reaction_title = new_title
     await context.send("The title is now `" + reaction_title + "`!")
     await context.message.delete()
+
 
 @client.command(name = "reaction_add_role", help = "Admin command")
 async def reaction_add_role(context, role: discord.Role, reaction):
@@ -129,6 +128,7 @@ async def reaction_add_role(context, role: discord.Role, reaction):
     else:
         await context.send("Something fucked up. You should probs add a role.")
 
+
 @client.command(name = "reaction_remove_role", help = "Admin command")
 async def reaction_remove_role(context, role: discord.Role):
     if role.name in reactions:
@@ -138,6 +138,7 @@ async def reaction_remove_role(context, role: discord.Role):
     else:
         await context.send("Something fucked up. You never had that role.")
     
+
 @client.command(name = "reaction_send_post", help = "Admin command")
 async def reaction_send_post(context):
 
@@ -152,6 +153,8 @@ async def reaction_send_post(context):
     for role in reactions:
         await message.add_reaction(reactions[role])
     await context.message.delete()
+
+
 
 #tournament check-in commands#
 
@@ -254,6 +257,5 @@ async def queue_delete(context):
     await context.message.delete()
 
 
-
 #run#
-client.run("Nzk4MjI3OTU5MzEwOTc1MDU3.X_x9tw.BZWYsveH5cOtOuT-QypzC1-89i4")
+client.run(client_secret)

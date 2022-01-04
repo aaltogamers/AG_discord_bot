@@ -256,6 +256,5 @@ async def queue_delete(context):
     await context.send("The current queue has been deleted")
     await context.message.delete()
 
-
 #run#
 client.run(client_secret)

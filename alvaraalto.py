@@ -6,6 +6,7 @@ from discord.ext.commands import Bot
 import sys
 client_secret = sys.argv[1]
 
+
 import random
 from random import choice
 
@@ -255,6 +256,23 @@ async def queue_delete(context):
     queue_members = []
     await context.send("The current queue has been deleted")
     await context.message.delete()
+
+
+# Minecraft server stuff 
+
+from mcipc.query import Client
+        
+# A command to get the players in the server
+@client.command(name = "mc", help = "Lists info about the Minecraft server's players")
+async def mc(context):
+    # Use minecraft server as client and get list of players currently in-game
+    with Client('minecraft.aaltogamers.fi', 25565) as cli:
+        msg = f"**Minecraft server stats:**\n"
+        stats = cli.stats(True)
+        msg += f"Number of players: **{stats.num_players}**/{stats.max_players}\n"
+        msg += "Currently playing: `" + str(stats.players) + "`"
+        await context.send(msg)
+
 
 #run#
 client.run(client_secret)

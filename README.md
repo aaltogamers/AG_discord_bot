@@ -1,4 +1,4 @@
-# Aalto_Gamers_Discord_bot
+# Aalto Gamers Discord Bot
 The Discord bot for the Aalto Gamers discord server. Bot is also known as Alvar Aalto
 
 ## Dependencies:

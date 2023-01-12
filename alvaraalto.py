@@ -2,10 +2,14 @@ import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot
 
-# Get client secret as an argument
-import sys
-client_secret = sys.argv[1]
+env = {}
+with open(".env") as f:
+    for line in f:
+        key, value = line.strip().split('=', 1)
+        env[key] = value
 
+# Get client secret from .env file
+client_secret = env["DISCORD_TOKEN"]
 
 import random
 from random import choice

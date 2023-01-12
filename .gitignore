@@ -1,2 +1,1 @@
-*.old
-run.sh
+.env

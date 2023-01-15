@@ -13,3 +13,12 @@ jobs:
           key: ${{ secrets.KEY }}
           source: "alvaraalto.py"
           target: "/home/opc/dc_bot"
+        - name: executing remote ssh commands using password
+
+      - uses: appleboy/ssh-action@v0.1.7
+      - name: Restart Service
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: systemctl --user stop dc_bot; systemctl --user start dc_bot

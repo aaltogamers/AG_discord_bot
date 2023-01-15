@@ -13,10 +13,9 @@ jobs:
           key: ${{ secrets.KEY }}
           source: "alvaraalto.py"
           target: "/home/opc/dc_bot"
-        - name: executing remote ssh commands using password
 
-      - uses: appleboy/ssh-action@v0.1.7
       - name: Restart Service
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}

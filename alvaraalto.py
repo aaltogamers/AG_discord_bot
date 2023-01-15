@@ -20,7 +20,8 @@ intents.reactions = True
 
 client = commands.Bot(command_prefix = "!", intents = intents)
 
-status = ["Vibing 8)", "😀", "😃", "😄", "😅", "🤣", "😇", "down bad😔", "tilted🤬", "Molding some glass", "Looking at your grades👀", "👨🏻‍🎓", "Gamin'", "League of Legends", "Rocket League", "CS:GO", "Hearthstone", "Browser games", "Civ 6", "With your feelings😈", "The Game"]
+status = ["Bruh"]
+#["Vibing 8)", "😀", "😃", "😄", "😅", "🤣", "😇", "down bad😔", "tilted🤬", "Molding some glass", "Looking at your #grades👀", "👨🏻‍🎓", "Gamin'", "League of Legends", "Rocket League", "CS:GO", "Hearthstone", "Browser games", "Civ #6", "With your feelings😈", "The Game"]
 
 #automated roles globals#
 reaction_title = ""

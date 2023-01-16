@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands, tasks
-from discord.ext.commands import Bot
 
 env = {}
 with open(".env") as f:
@@ -10,18 +9,22 @@ with open(".env") as f:
 
 # Get client secret from .env file
 client_secret = env["DISCORD_TOKEN"]
+is_dev_mode = "DEVELOPMENT" in env
 
 import random
 from random import choice
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 intents.reactions = True
 
-client = commands.Bot(command_prefix = "!", intents = intents)
+client = commands.Bot(command_prefix = "!", intents = intents)  
 
-status = ["Bigger Bruh"]
-#["Vibing 8)", "😀", "😃", "😄", "😅", "🤣", "😇", "down bad😔", "tilted🤬", "Molding some glass", "Looking at your #grades👀", "👨🏻‍🎓", "Gamin'", "League of Legends", "Rocket League", "CS:GO", "Hearthstone", "Browser games", "Civ #6", "With your feelings😈", "The Game"]
+def getGuild():
+    return client.get_guild(1064512464353509407 if is_dev_mode else 273889488520871946)
+
+
+status = ["Vibing 8)", "😀", "😃", "😄", "😅", "🤣", "😇", "down bad😔", "tilted🤬", "Molding some glass", "Looking at your #grades👀", "👨🏻‍🎓", "Gamin'", "League of Legends", "Rocket League", "CS:GO", "Hearthstone", "Browser games", "Minecraft", "Civ VI", "With your feelings😈", "The Game"]
 
 #automated roles globals#
 reaction_title = ""
@@ -50,12 +53,15 @@ async def change_status():
 @client.event
 async def on_ready():
     change_status.start()
-    admin_channel = client.get_channel(805883542705799228)
+    guild = getGuild()
+    client.tree.copy_global_to(guild=guild) 
+    await client.tree.sync()
+    admin_channel = client.get_channel(1064518968271974513 if is_dev_mode else 805883542705799228)
     await admin_channel.send("Ines :D")
 
 @client.event
 async def on_member_join(member):
-    guild = client.get_guild(273889488520871946)
+    guild = getGuild()
     welcome_channel = guild.get_channel(805886391853514812)
     mbed = discord.Embed(title = "Welcome {}!".format(member.name), description = "Welcome to the Aalto gamers Discord server!\nHead over to the #roles channel to tell us what games you play and want roles for.\nAnd again, a warm welcome to you!", color = 0xFF4500)
     await welcome_channel.send(f"Welcome to the server {member.mention} 🥳")
@@ -86,6 +92,10 @@ async def on_reaction_remove(reaction, user):
             await user.remove_roles(role_for_reaction)
 
 #commands#
+
+@client.tree.command()
+async def bruh(interaction: discord.Interaction) -> None:
+  await interaction.response.send_message("Hello from my command!")
 
 @client.command(name = "ping", help = "Admin command")
 async def ping(context):
@@ -279,5 +289,6 @@ async def mc(context):
         await context.send(msg)
 
 
-#run#
+#run#  
+
 client.run(client_secret)

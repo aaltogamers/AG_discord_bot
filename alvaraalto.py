@@ -4,6 +4,8 @@ import random
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
+import re
+import traceback
 
 env = {}
 with open(".env") as f:
@@ -24,6 +26,10 @@ client = commands.Bot(command_prefix="!", intents=intents)
 def getGuild():
     return client.get_guild(1064512464353509407 if is_dev_mode else 273889488520871946)
 
+
+roleMessageId = 1066479093387886713 if is_dev_mode else 1066493823628361919
+roleChannelId = 1065631803425169639 if is_dev_mode else 805942507250515989
+errorMessageChannnelId = 1066495980641460224 if is_dev_mode else 1066495898777034824
 
 # tournament check-in globals#
 # More can be added as needed#
@@ -89,6 +95,28 @@ async def on_member_join(member):
     await member.send(embed=mbed)
 
 
+@client.event
+async def on_raw_reaction_add(rawReaction):
+    try:
+        if rawReaction.message_id == roleMessageId:
+            role = await getRoleFromEmoji(rawReaction.emoji)
+            await addRole(role, rawReaction.member)
+    except Exception as e:
+        await traceErrorAndSendErrorMessage()
+
+
+@client.event
+async def on_raw_reaction_remove(rawReaction):
+    try:
+        if rawReaction.message_id == roleMessageId:
+            role = await getRoleFromEmoji(rawReaction.emoji)
+            guild = getGuild()
+            user = guild.get_member(rawReaction.user_id)
+            await removeRole(role, user)
+    except Exception as e:
+        await traceErrorAndSendErrorMessage()
+
+
 # Commands
 
 
@@ -113,6 +141,15 @@ async def roll(interaction: discord.Interaction, n: int = 100):
         await interaction.response.send_message(round(random.uniform(1, 100)))
 
 
+async def sendErrorMessage(message):
+    channel = client.get_channel(errorMessageChannnelId)
+    await channel.send(message)
+
+
+async def traceErrorAndSendErrorMessage():
+    await sendErrorMessage(traceback.format_exc())
+
+
 # Role creation commands
 
 
@@ -132,42 +169,63 @@ async def getValidRoles():
     return validRoles
 
 
-@client.tree.command(description="Add a role to yourself.")
-@app_commands.describe(role="The name of the role you want to add.")
-async def add_role(interaction: discord.Interaction, role: str):
+async def getRolesAndEmojis():
+    channel = client.get_channel(roleChannelId)
+    message = await channel.fetch_message(roleMessageId)
+    textAndEmojis = re.findall(r".+ - .", message.content)
+    rolesAndEmojis = {}
+    for textAndEmoji in textAndEmojis:
+        text, emoji = textAndEmoji.split(" - ")
+        rolesAndEmojis[emoji] = text
+    return rolesAndEmojis
+
+
+async def getRoleFromEmoji(emoji):
+    rolesAndEmojis = await getRolesAndEmojis()
+    emoji = emoji
+    return rolesAndEmojis[emoji.name]
+
+
+async def addRole(role, user):
     roles = await getValidRoles()
-    user: discord.User = interaction.user
     roleToAdd = discord.utils.get(roles, name=role)
     roleExists = roleToAdd != None
     alreadyHasRole = roleToAdd in user.roles
     if roleExists and alreadyHasRole:
-        await interaction.response.send_message(
-            f"You already have the role *{roleToAdd.name}*"
-        )
+        return f"You already have the role *{roleToAdd.name}*"
     elif roleExists:
         await user.add_roles(roleToAdd)
-        await interaction.response.send_message(f"Added role *{roleToAdd.name}*")
+        return f"Added role *{roleToAdd.name}*"
     else:
-        await interaction.response.send_message(f"Invalid role *{role}*")
+        raise Exception(f"Invalid role *{role}*")
 
 
-@client.tree.command(description="Remove a role from yourself.")
-@app_commands.describe(role="The name of the role you want to remove.")
-async def remove_role(interaction: discord.Interaction, role: str):
+async def removeRole(role, user):
     roles = await getValidRoles()
-    user: discord.User = interaction.user
     roleToRemove = discord.utils.get(roles, name=role)
     roleExists = roleToRemove != None
     alreadyHasRole = roleToRemove in user.roles
     if roleExists and alreadyHasRole:
         await user.remove_roles(roleToRemove)
-        await interaction.response.send_message(f"Removed role *{roleToRemove.name}*")
+        return f"Removed role *{roleToRemove.name}*"
     elif roleExists:
-        await interaction.response.send_message(
-            f"You don't have the role *{roleToRemove.name}*"
-        )
+        return f"You don't have the role *{roleToRemove.name}*"
     else:
-        await interaction.response.send_message(f"Invalid role *{role}*")
+        raise Exception(f"Invalid role *{role}*")
+
+
+@client.tree.command(description="Add a role to yourself.")
+@app_commands.describe(role="The name of the role you want to add.")
+async def add_role(interaction: discord.Interaction, role: str):
+    user: discord.User = interaction.user
+    await interaction.response.send_message(await addRole(role, user))
+
+
+@client.tree.command(description="Remove a role from yourself.")
+@app_commands.describe(role="The name of the role you want to remove.")
+async def remove_role(interaction: discord.Interaction, role: str):
+    user: discord.User = interaction.user
+    await interaction.response.send_message(await removeRole(role, user))
 
 
 @client.tree.command(description="List all roles you can add/remove.")
@@ -176,7 +234,9 @@ async def list_roles(interaction: discord.InteractionMessage):
     validRoles = await getValidRoles()
     roleNamesList = list(map(lambda role: role.name, validRoles))
     roleNames = ", ".join(roleNamesList)
-    await interaction.response.send_message(f"Roles that can be added/removed: {roleNames}")
+    await interaction.response.send_message(
+        f"Roles that can be added/removed: {roleNames}"
+    )
 
 
 # Tournament check-in commands#

@@ -1,2 +1,3 @@
 .env
 oracle.key
+__pycache__

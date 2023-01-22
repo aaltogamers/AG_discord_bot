@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           source: "src/*"
-          target: "/home/opc/dc_bot/src"
+          target: "/home/opc/dc_bot"
 
       - name: Restart Service
         uses: appleboy/ssh-action@v0.1.7

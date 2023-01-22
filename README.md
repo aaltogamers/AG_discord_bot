@@ -13,5 +13,7 @@ The Discord bot for the Aalto Gamers discord server. Bot is also known as Alvar 
 
 Copy .env-example, rename it .env and add Bot Token
 
+```
 DISCORD_TOKEN=Discord Bot Token
-DEVELOPMENT=If has any value, uses dev server instead of real one
+DEVELOPMENT=If has any value, uses dev server id values instead of real server ones
+```

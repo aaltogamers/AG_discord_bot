@@ -6,7 +6,7 @@ from src.commands import *
 from src.minecraft import *
 from src.roles import *
 from src.tournaments import *
-from src.queue import *
+from src.gamequeue import *
 
 
 @tasks.loop(seconds=1800)

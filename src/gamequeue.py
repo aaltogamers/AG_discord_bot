@@ -73,17 +73,16 @@ class LobbyGroup:
 
 
 def isSublist(s: list[str], l: list[str]):
-    len_s = len(s)  # so we don't recompute length of s on every iteration
+    len_s = len(s)
     return any(s == l[i : len_s + i] for i in range(len(l) - len_s + 1))
 
 
 class Queue:
-    def __init__(self, name: str, itemDict: dict[str, int], messageId: int):
+    def __init__(self, name: str, itemDict: dict[str, int]):
         self.name = name
         self.members: dict[int, QueueMember] = {}
-        self.possibilities = []
         self.itemDict = itemDict
-        self.messageId = messageId
+        self.messageId: int | None = None
 
     def add_member(self, member: QueueMember):
         self.members[member.id] = member
@@ -91,7 +90,15 @@ class Queue:
     def remove_member(self, id: int):
         self.members.pop(id)
 
-    def updatePossibilities(self) -> tuple[int, list[LobbyGroup]]:
+    def updatePossibilities(self) -> tuple[int, tuple[int, list[LobbyGroup]]]:
+        playerCountMinus = 0
+        possibilities: tuple[int, list[LobbyGroup]] = (0, [])
+        while possibilities[1].__len__() == 0:
+            possibilities = self.getPossibilities(playerCountMinus)
+            playerCountMinus += 1
+        return (playerCountMinus - 1, possibilities)
+
+    def getPossibilities(self, playerCountMinus: int) -> tuple[int, list[LobbyGroup]]:
         possibilities: list[LobbyGroup] = []
         allPossibleLobbies: list[Lobby] = []
         for itemName, itemPlayerCount in self.itemDict.items():
@@ -105,7 +112,7 @@ class Queue:
             )
 
             possibleCombinationsForGame = itertools.combinations(
-                possibleMembers, itemPlayerCount
+                possibleMembers, max(itemPlayerCount - playerCountMinus, 1)
             )
             comb: list[int]
             for comb in possibleCombinationsForGame:  # type: ignore
@@ -217,22 +224,54 @@ class Select(discord.ui.Select):  # type: ignore
         queueMember = queue.members[user.id]
         queueMember.update_items(self.values)
         channel: discord.TextChannel = interaction.channel  # type: ignore
-        message: discord.Message = await channel.fetch_message(queue.messageId)
-        oldEmbed = message.embeds[0]
-        embed = discord.Embed(title=oldEmbed.title, color=0xFF4500)
-        (possibleLobbyCount, possibleLobbies) = queue.updatePossibilities()
-        embed.add_field(
-            name="Total possible lobbies", value=possibleLobbyCount, inline=False
-        )
-        for lobbyGroup in possibleLobbies:
+        if queue.messageId:
+            message: discord.Message = await channel.fetch_message(queue.messageId)
+            oldEmbed = message.embeds[0]
+            embed = discord.Embed(title=oldEmbed.title, color=0xFF4500)
             embed.add_field(
-                name=lobbyGroup.gamesString(),
-                value=lobbyGroup.prettyString(queue),
+                name="__Players per game__",
+                value="",
                 inline=False,
             )
+            totalGames: list[str] = []
+            for member in queue.members.values():
+                for game in member.items:
+                    totalGames.append(game)
+            for game in queue.itemDict.keys():
+                embed.add_field(
+                    name=f"*{game}*",
+                    value=f"{totalGames.count(game)}",
+                    inline=True,
+                )
+            (
+                missingPlayerAmount,
+                (possibleLobbyCount, possibleLobbies),
+            ) = queue.updatePossibilities()
+            embed.add_field(
+                name="__Total possible lobbies__",
+                value=possibleLobbyCount,
+                inline=False,
+            )
+            if missingPlayerAmount > 0:
+                embed.add_field(
+                    name="__Missing players__",
+                    value=f"These lobbies are {missingPlayerAmount} players short",
+                    inline=False,
+                )
+            embed.add_field(
+                name="__Lobbies__",
+                value="",
+                inline=False,
+            )
+            for lobbyGroup in possibleLobbies:
+                embed.add_field(
+                    name=f"*{lobbyGroup.gamesString()}*",
+                    value=lobbyGroup.prettyString(queue),
+                    inline=False,
+                )
 
-        queue.updatePossibilities()
-        await message.edit(embed=embed)
+            queue.updatePossibilities()
+            await message.edit(embed=embed)
         await interaction.response.defer()
 
 
@@ -253,54 +292,12 @@ async def queue(interaction: discord.Interaction, name: str, items: str):
     for item in items.split(","):
         key, value = item.split(":")
         itemsDict[key] = int(value)
-    res = await interaction.channel.send(embed=embed)  # type: ignore
-    queue = Queue(name, itemsDict, res.id)  # type: ignore
-    for member in testMembers:
-        queue.add_member(member)
-    queue.updatePossibilities()
+    queue = Queue(name, itemsDict)
     queues[name] = queue
     await interaction.response.send_message(
         content=f"Select what you want to play in {name}:",
         view=SelectView(queue),
     )
-
-
-testMembers: list[QueueMember] = []
-
-testGames = [
-    ["LoL"],
-    ["LoL", "CSGO"],
-    ["LoL", "CSGO", "Valorant"],
-    ["LoL", "CSGO", "Overwatch"],
-    ["LoL", "CSGO", "Valorant", "Overwatch"],
-    ["LoL", "CSGO", "Valorant", "Overwatch"],
-    ["LoL", "CSGO"],
-    ["LoL", "CSGO"],
-    ["LoL", "CSGO"],
-    ["LoL"],
-    ["LoL"],
-    ["CSGO"],
-    ["CSGO"],
-    ["CSGO"],
-    ["CSGO"],
-    ["Valorant"],
-    ["Valorant"],
-    ["Valorant"],
-    ["Overwatch"],
-    ["Overwatch"],
-    ["Overwatch"],
-    ["Overwatch"],
-    ["Overwatch"],
-]
-
-for i in range(0, testGames.__len__() - 1):
-    testMember = QueueMember(f"Gamer{i}", i, i)
-    items = testGames[i]
-    testMember.update_items(items)
-    testMembers.append(testMember)
-
-
-queue: Queue = Queue("Cool", {"LoL": 10, "CSGO": 10, "Overwatch": 6, "Valorant": 5}, 1)  # type: ignore
-for member in testMembers:
-    queue.add_member(member)
-queue.updatePossibilities()
+    messageRes = await interaction.channel.send(embed=embed)  # type: ignore
+    messageId = messageRes.id  # type: ignore
+    queue.messageId = messageId

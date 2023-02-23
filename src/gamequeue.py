@@ -3,8 +3,17 @@ import discord
 from discord import app_commands
 from .setup import client
 import itertools
+import typing
+
 
 queues = {}
+
+
+def allToString(list: typing.Iterable[typing.Any]) -> list[str]:
+    asStrings: list[str] = []
+    for item in list:
+        asStrings.append(str(item))
+    return asStrings
 
 
 class Lobby:
@@ -17,10 +26,11 @@ class Lobby:
         return f"{self.game}: {self.memberIds}"
 
     def prettyString(self, queue: Queue):
+        joinString = ", "
         memberUsernames: list[str] = []
         for memberId in self.memberIds:
             memberUsernames.append(queue.members[memberId].name)
-        return f"{self.game}: {memberUsernames}"
+        return f"{self.game}: ({joinString.join(memberUsernames)})"
 
     def __eq__(self, __o: object) -> bool:
 
@@ -47,17 +57,24 @@ class LobbyGroup:
         return ", ".join(self.games())
 
     def __str__(self):
-        lobbiesString = list(map(lambda lobby: lobby.__str__(), self.lobbies))
-        return f"{self.memberCount()}:{lobbiesString}"
+        return f"{self.memberCount()}:{allToString(self.lobbies)}"
 
     def prettyString(self, queue: Queue):
-        lobbiesString = list(map(lambda lobby: lobby.prettyString(queue), self.lobbies))
-        return f"{self.memberCount()} players:\n{lobbiesString}"
+        joinString = "\n"
+        lobbiesString = joinString.join(
+            map(lambda lobby: lobby.prettyString(queue), self.lobbies)
+        )
+        return f"{self.memberCount()} players: Ex.\n{lobbiesString}"
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, LobbyGroup):
             return self.lobbies == __o.lobbies
         return False
+
+
+def isSublist(s: list[str], l: list[str]):
+    len_s = len(s)  # so we don't recompute length of s on every iteration
+    return any(s == l[i : len_s + i] for i in range(len(l) - len_s + 1))
 
 
 class Queue:
@@ -74,7 +91,7 @@ class Queue:
     def remove_member(self, id: int):
         self.members.pop(id)
 
-    def updatePossibilities(self):
+    def updatePossibilities(self) -> tuple[int, list[LobbyGroup]]:
         possibilities: list[LobbyGroup] = []
         allPossibleLobbies: list[Lobby] = []
         for itemName, itemPlayerCount in self.itemDict.items():
@@ -135,23 +152,29 @@ class Queue:
                 possibilitiesGroupedByGame[games] = []
             possibilitiesGroupedByGame[games].append(possibility)
 
-        print(possibilities.__len__())
-        print(uniquePossibilities.__len__())
-
         onePossibilityPerGameGroup: list[LobbyGroup] = []
         for _, possibilitiesForSpesificGameGroup in possibilitiesGroupedByGame.items():
-            print(possibilitiesForSpesificGameGroup[0])
             onePossibilityPerGameGroup.append(possibilitiesForSpesificGameGroup[0])
-        return onePossibilityPerGameGroup
+
+        onePossibilityPerGameGroupMinusRedundant: list[LobbyGroup] = []
+        for possibility in onePossibilityPerGameGroup:
+            isSubOfAnother = any(
+                map(
+                    lambda otherPossibility: possibility.gamesString()
+                    != otherPossibility.gamesString()
+                    and isSublist(possibility.games(), otherPossibility.games()),
+                    onePossibilityPerGameGroup,
+                )
+            )
+            if not isSubOfAnother:
+                onePossibilityPerGameGroupMinusRedundant.append(possibility)
+
+        return (uniquePossibilities.__len__(), onePossibilityPerGameGroupMinusRedundant)
 
     def __str__(self):
         separator = ", "
-        itemsAsStrings: list[str] = []
-        membersAsStrings: list[str] = []
-        for value in self.itemDict.items():
-            itemsAsStrings.append(value.__str__())
-        for value in self.members.values():
-            membersAsStrings.append(value.__str__())
+        itemsAsStrings: list[str] = allToString(self.itemDict.items())
+        membersAsStrings: list[str] = allToString(self.members.values())
         return f"{self.name}. Options: [{separator.join(itemsAsStrings)}].\nMembers: [{separator.join(membersAsStrings)}]"
 
 
@@ -197,7 +220,10 @@ class Select(discord.ui.Select):  # type: ignore
         message: discord.Message = await channel.fetch_message(queue.messageId)
         oldEmbed = message.embeds[0]
         embed = discord.Embed(title=oldEmbed.title, color=0xFF4500)
-        possibleLobbies = queue.updatePossibilities()
+        (possibleLobbyCount, possibleLobbies) = queue.updatePossibilities()
+        embed.add_field(
+            name="Total possible lobbies", value=possibleLobbyCount, inline=False
+        )
         for lobbyGroup in possibleLobbies:
             embed.add_field(
                 name=lobbyGroup.gamesString(),

@@ -33,7 +33,6 @@ class Lobby:
         return f"{self.game}: ({joinString.join(memberUsernames)})"
 
     def __eq__(self, __o: object) -> bool:
-
         if isinstance(__o, Lobby):
             return self.game == __o.game and set(self.memberIds) == set(__o.memberIds)
         return False

@@ -3,10 +3,8 @@ import discord
 from discord.ext import tasks
 from src.setup import *
 from src.commands import *
-from src.minecraft import *
-from src.roles import *
-from src.tournaments import *
 from src.gamequeue import *
+from src.leaderboard import *
 
 
 @tasks.loop(seconds=1800)
@@ -40,13 +38,13 @@ async def change_status():
 
 @client.event
 async def on_ready():
-    change_status.start()
-    client.tree.copy_global_to(guild=getGuild())
+    # client.tree.copy_global_to(guild=getGuild())
     await client.tree.sync()
+    print("Bot is ready.")
 
 
 @client.event
-async def on_member_join(member):
+async def on_member_join(member: discord.Member):
     guild = getGuild()
     welcome_channel = guild.get_channel(805886391853514812)
     mbed = discord.Embed(
@@ -54,8 +52,8 @@ async def on_member_join(member):
         description="Welcome to the Aalto gamers Discord server!\nHead over to the #roles channel to tell us what games you play and want roles for.\nAnd again, a warm welcome to you!",
         color=0xFF4500,
     )
-    await welcome_channel.send(f"Welcome to the server {member.mention} 🥳")
+    await welcome_channel.send(f"Welcome to the server {member.mention} 🥳")  # type: ignore
     await member.send(embed=mbed)
 
 
-client.run(client_secret)
+client.run(CLIENT_SECRET)

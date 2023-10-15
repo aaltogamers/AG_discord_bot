@@ -10,35 +10,27 @@ from src.leaderboard import *
 @tasks.loop(seconds=1800)
 async def change_status():
     status = [
-        "Vibing 8)",
-        "😀",
-        "😃",
-        "😄",
-        "😅",
-        "🤣",
-        "😇",
-        "down bad😔",
-        "tilted🤬",
-        "Molding some glass",
-        "Looking at your #grades👀",
-        "👨🏻‍🎓",
-        "Gamin'",
         "League of Legends",
-        "Rocket League",
-        "CS:GO",
+        "CS:2",
         "Hearthstone",
-        "Browser games",
+        "Geoguessr",
         "Minecraft",
         "Civ VI",
         "With your feelings😈",
         "The Game",
+        "Yakuza 0",
+        "Among Us",
+        "in OSM 2024",
     ]
+    moreCommonStatus = "signup to AG CS2 tournament"
+    for _ in range(10):
+        status.append(moreCommonStatus)
     await client.change_presence(activity=discord.Game(choice(status)))
 
 
 @client.event
 async def on_ready():
-    # client.tree.copy_global_to(guild=getGuild())
+    change_status.start()
     await client.tree.sync()
     print("Bot is ready.")
 

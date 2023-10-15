@@ -1,9 +1,11 @@
 import discord
 from discord.ext import commands
 import traceback
+import os
 
 env = {}
-with open(".env") as f:
+filePath = os.path.join(os.path.dirname(__file__), "../.env")
+with open(filePath) as f:
     for line in f:
         if line.startswith("#") or not line.strip():
             continue

@@ -8,6 +8,7 @@ The Discord bot for the Aalto Gamers discord server. Bot is also known as Alvar 
 - Python pip (pip3)
 - discord.py (Installable via pip)
 - pyyaml (Installable via pip)
+- requests (Installable via pip)
 
 ## .env File
 

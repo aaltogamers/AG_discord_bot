@@ -1,32 +1,13 @@
-name: Copy DC bot to Ubuntu VM
+name: Do git pull in Google Cloud
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Copy alvaraalto.py to Ubuntu VM
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          source: "alvaraalto.py"
-          target: "/home/opc/dc_bot"
-
-      - name: Copy src directory to Ubuntu VM
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          source: "src/*"
-          target: "/home/opc/dc_bot"
-
       - name: Restart Service
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          script: systemctl --user stop dc_bot; systemctl --user start dc_bot
+          script: cd /home/ottoj/git/AG_discord_bot/;git fetch --all;git pull origin main --ff-only; sudo systemctl restart ag_bot

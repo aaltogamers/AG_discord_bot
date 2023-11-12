@@ -105,16 +105,16 @@ def getParticipantString():
 
 
 def getparticipantIdsAndScores():
-    participantsAndScores: dict[int, int] = {}
+    participantsAndScores: dict[str, int] = {}
 
     for participant in allParticipants:
-        participantsAndScores[participant.id] = 1
+        participantsAndScores[participant.id.__str__()] = 1
     for participant in onePointsParticipants:
-        participantsAndScores[participant.id] = 2
+        participantsAndScores[participant.id.__str__()] = 2
     for participant in twoPointParticipants:
-        participantsAndScores[participant.id] = 3
+        participantsAndScores[participant.id.__str__()] = 3
     for participant in threePointParticipants:
-        participantsAndScores[participant.id] = 4
+        participantsAndScores[participant.id.__str__()] = 4
 
     return participantsAndScores
 
@@ -157,7 +157,7 @@ class Button(discord.ui.Button):
             ]
             fileContent["learderboard_entries"].append(entry)
         updateNamesToDCNames(fileContent)
-
+        commitFileContent(fileContent, sha)
         message = await interaction.channel.fetch_message(messageId[0])  # type: ignore
         await message.edit(
             content=f"Scores that were addded to the Biweekly Leaderboard:\n{getParticipantString()}"
@@ -178,37 +178,6 @@ class SelectView(discord.ui.View):
             self.add_item(item)
 
 
-@client.tree.command(description="Fix leaderboard")
-async def fixleaderboard(interaction: discord.Interaction):
-    fileContent, sha = getFileContentAndSha()
-    guild = getGuild()
-
-    for member in guild.members:
-        for entry in fileContent["learderboard_entries"]:
-            discordId = entry["discord_user_id"].__str__()
-            if member.id.__str__()[:-4] == discordId[:-4]:
-                entry["discord_user_id"] = member.id.__str__()
-
-    newLeaderboardEntries = []
-    goneTroughIds = set()
-
-    for entry in fileContent["learderboard_entries"]:
-        if entry["discord_user_id"] in goneTroughIds:
-            for newEntry in newLeaderboardEntries:
-                if entry["discord_user_id"] == newEntry["discord_user_id"]:
-                    newEntry["point_entries"].extend(entry["point_entries"])
-                    break
-        else:
-            goneTroughIds.add(entry["discord_user_id"])
-            newLeaderboardEntries.append(entry)
-
-    fileContent["learderboard_entries"] = newLeaderboardEntries
-
-    commitFileContent(fileContent, sha)
-
-    await interaction.response.send_message(content="Leaderboard fixed!")
-
-
 @client.tree.command(description="Get the current status of the Biweekly Leaderboard")
 async def leaderboard(interaction: discord.Interaction):
     fileContent, _ = getFileContentAndSha()
@@ -223,13 +192,13 @@ async def leaderboard(interaction: discord.Interaction):
     i = 0
     for name, score in sorted(leaderboardMap.items(), key=lambda x: -x[1]):
         if i == 0:
-            leaderboardString += ":crown:"
+            leaderboardString += ":crown: "
         elif i == 1:
-            leaderboardString += ":second_place:"
+            leaderboardString += ":second_place: "
         elif i == 2:
-            leaderboardString += ":third_place:"
+            leaderboardString += ":third_place: "
         else:
-            leaderboardString += "       "
+            leaderboardString += f"{i+1}.   "
         leaderboardString += f"{name}: {score}\n"
         i += 1
     await interaction.response.send_message(
@@ -245,7 +214,6 @@ async def leaderboard_update(interaction: discord.Interaction):
     boardRole = guild.get_role(
         1064644309669920818 if IS_DEV_MODE else 287873774852767745
     )
-    # if not IS_DEV_MODE :
     caller = guild.get_member(interaction.user.id)
     if caller is None or caller.voice is None or caller.voice.channel is None:
         await interaction.response.send_message(

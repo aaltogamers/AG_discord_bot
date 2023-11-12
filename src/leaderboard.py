@@ -198,6 +198,7 @@ async def leaderboard_update_names(interaction: discord.Interaction):
     fileContent, sha = getFileContentAndSha()
     updateNamesToDCNames(fileContent)
     commitFileContent(fileContent, sha)
+    await interaction.response.send_message(content="Updated leaderboard user names!")
 
 
 class SelectView(discord.ui.View):

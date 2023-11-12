@@ -4,8 +4,23 @@ import yaml
 import json
 from .setup import GITHUB_TOKEN, client, getGuild, IS_DEV_MODE
 import discord
-from discord import app_commands
 import datetime
+from typing import TypedDict
+
+
+class PointEntryType(TypedDict):
+    points: int
+    points_acquired_on: str
+
+
+class LeaderBoardEntryType(TypedDict):
+    discord_user_id: str
+    name: str
+    point_entries: list[PointEntryType]
+
+
+class FileContentType(TypedDict):
+    learderboard_entries: list[LeaderBoardEntryType]
 
 
 def getFileContentAndSha():
@@ -17,7 +32,7 @@ def getFileContentAndSha():
     fileContentString = (
         base64.b64decode(fileContentBase64).decode("utf-8").strip()[3:-3]
     )
-    fileContent = yaml.load(fileContentString, Loader=yaml.FullLoader)
+    fileContent: FileContentType = yaml.load(fileContentString, Loader=yaml.FullLoader)
     return fileContent, sha
 
 
@@ -35,7 +50,7 @@ def commitFileContent(fileContent, sha):
         "content": base64.b64encode(yamlString.encode("utf-8")).decode("utf-8"),
         "sha": sha,
     }
-    response = requests.put(
+    requests.put(
         url="https://api.github.com/repos/aaltogamers/AG_web/contents/src/content/leaderboard.md",
         data=json.dumps(data),
         headers=headers,
@@ -122,8 +137,8 @@ def getparticipantIdsAndScores():
 def updateNamesToDCNames(fileContent):
     guild = getGuild()
     for entry in fileContent["learderboard_entries"]:
-        discordId = entry["discord_user_id"]
-        member = guild.get_member(discordId)
+        discordId: str = entry["discord_user_id"]
+        member = guild.get_member(int(discordId))
         if member is not None:
             entry["name"] = member.display_name
 
@@ -149,12 +164,11 @@ class Button(discord.ui.Button):
                 participantsAndScores.pop(discordId)
         guild = getGuild()
         for discordId, score in participantsAndScores.items():
-            entry = {}
-            entry["name"] = guild.get_member(discordId).display_name  # type: ignore
-            entry["discord_user_id"] = discordId
-            entry["point_entries"] = [
-                {"points": score, "points_acquired_on": currentDate}
-            ]
+            entry: LeaderBoardEntryType = {
+                "name": guild.get_member(int(discordId)).display_name,  # type: ignore
+                "discord_user_id": discordId,
+                "point_entries": [{"points": score, "points_acquired_on": currentDate}],
+            }
             fileContent["learderboard_entries"].append(entry)
         updateNamesToDCNames(fileContent)
         commitFileContent(fileContent, sha)
@@ -165,6 +179,25 @@ class Button(discord.ui.Button):
         await interaction.response.edit_message(
             content="Leaderboard updated!", view=None
         )
+
+
+@client.tree.command(description="Update the Biweekly Leaderboard user names")
+async def leaderboard_update_names(interaction: discord.Interaction):
+    guild = getGuild()
+    boardRole = guild.get_role(
+        1064644309669920818 if IS_DEV_MODE else 287873774852767745
+    )
+    caller = guild.get_member(interaction.user.id)
+    if caller is None:
+        return
+    if boardRole not in caller.roles:
+        await interaction.response.send_message(
+            "This command is only for board members!"
+        )
+        return
+    fileContent, sha = getFileContentAndSha()
+    updateNamesToDCNames(fileContent)
+    commitFileContent(fileContent, sha)
 
 
 class SelectView(discord.ui.View):

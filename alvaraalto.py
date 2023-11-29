@@ -21,10 +21,13 @@ async def change_status():
         "Yakuza 0",
         "Among Us",
         "in OSM 2024",
+        "Cyberpunk 2077",
+        "Stuble Guys",
+        "in Biweeklies",
     ]
-    moreCommonStatus = "signup to AG CS2 tournament"
-    for _ in range(10):
-        status.append(moreCommonStatus)
+    # moreCommonStatus = "signup to AG CS2 tournament"
+    # for _ in range(10):
+    #    status.append(moreCommonStatus)
     await client.change_presence(activity=discord.Game(choice(status)))
 
 

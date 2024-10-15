@@ -1,13 +1,13 @@
-name: Do git pull in Google Cloud
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Restart Service
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          script: cd /home/ottoj/git/AG_discord_bot/;git fetch --all;git pull origin main --ff-only; sudo systemctl restart ag_bot
+steps:
+  - name: Log in to Azure
+    uses: azure/login@v1
+    with:
+      creds: ${{ secrets.AZURE_CREDENTIALS }}
+  - name: Build and deploy Container App
+    uses: azure/container-apps-deploy-action@v1
+    with:
+      appSourcePath: ${{ github.workspace }}
+      acrName: DiscordBotACR
+      containerAppName: discord-bot-container-app
+      resourceGroup: discord-bot-group
+      environmentVariables: DISCORD_TOKEN=${{secrets.DISCORD_TOKEN_DEV}} DEVELOPMENT=1

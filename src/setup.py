@@ -3,18 +3,13 @@ from discord.ext import commands
 import traceback
 import os
 
-env = {}
-filePath = os.path.join(os.path.dirname(__file__), "../.env")
-with open(filePath) as f:
-    for line in f:
-        if line.startswith("#") or not line.strip():
-            continue
-        key, value = line.strip().split("=", 1)
-        env[key] = value
 
-CLIENT_SECRET = env["DISCORD_TOKEN"]
-GITHUB_TOKEN = env["GITHUB_TOKEN"]
-IS_DEV_MODE = "DEVELOPMENT" in env
+
+CLIENT_SECRET = os.getenv("DISCORD_TOKEN", None)
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+IS_DEV_MODE = os.getenv("DEVELOPMENT", False)
+if not CLIENT_SECRET:
+    raise("Discord token not found from env")
 
 intents = discord.Intents.all()
 

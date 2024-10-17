@@ -38,5 +38,5 @@ jobs:
           cpu: 1
           memory: 1
           location: 'north europe'
-          environment-variables: DISCORD_TOKEN=${{secrets.DISCORD_TOKEN_DEV}} DEVELOPMENT=1
+          environment-variables: DISCORD_TOKEN=${{secrets.DISCORD_TOKEN_PROD}}
 

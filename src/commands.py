@@ -23,3 +23,10 @@ async def roll(interaction: discord.Interaction, n: int = 100):
         await interaction.response.send_message(round(random.uniform(1, end)))
     except (ValueError, TypeError, Exception) as _:
         await interaction.response.send_message(round(random.uniform(1, 100)))
+
+
+@client.tree.command(description="Get server owner")
+async def owner(interaction: discord.Interaction):
+    await interaction.response.send_message(
+        "Server owner is: " + str(interaction.guild.owner.name)
+    )

@@ -2,3 +2,4 @@
 env
 oracle.key
 __pycache__
+.venv

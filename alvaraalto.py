@@ -12,22 +12,20 @@ async def change_status():
     status = [
         "League of Legends",
         "CS:2",
-        "Hearthstone",
         "Geoguessr",
         "Minecraft",
         "Civ VI",
         "With your feelings😈",
-        "The Game",
         "Yakuza 0",
         "Among Us",
-        "in OSM 2024",
+        "in LoL OSM",
         "Cyberpunk 2077",
         "Stuble Guys",
         "in Biweeklies",
     ]
-    # moreCommonStatus = "signup to AG CS2 tournament"
-    # for _ in range(10):
-    #    status.append(moreCommonStatus)
+    moreCommonStatus = "waiting for the AG Sims tournament"
+    for _ in range(10):
+        status.append(moreCommonStatus)
     await client.change_presence(activity=discord.Game(choice(status)))
 
 

@@ -1,3 +1,5 @@
 requests
 discord.py
 pyyaml
+mcrcon
+dotenv

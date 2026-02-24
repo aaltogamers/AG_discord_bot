@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
 
@@ -14,8 +14,8 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-          
-      - name: 'Build and push image'
+
+      - name: "Build and push image"
         uses: azure/docker-login@v1
         with:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
@@ -25,8 +25,8 @@ jobs:
           docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/discord-bot-container:${{ github.sha }}
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/discord-bot-container:${{ github.sha }}
 
-      - name: 'Deploy to Azure Container Instances'
-        uses: 'azure/aci-deploy@v1'
+      - name: "Deploy to Azure Container Instances"
+        uses: "azure/aci-deploy@v1"
         with:
           resource-group: ${{ secrets.RESOURCE_GROUP }}
           dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
@@ -37,6 +37,5 @@ jobs:
           name: discord-bot-container
           cpu: 1
           memory: 1
-          location: 'north europe'
-          environment-variables: DISCORD_TOKEN=${{secrets.DISCORD_TOKEN_PROD}}
-
+          location: "north europe"
+          environment-variables: DISCORD_TOKEN=${{secrets.DISCORD_TOKEN_PROD}} RCON_IP=${{secrets.RCON_IP}} RCON_PASSWORD=${{secrets.RCON_PASSWORD}}

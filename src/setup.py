@@ -8,7 +8,6 @@ load_dotenv()
 
 
 CLIENT_SECRET = os.getenv("DISCORD_TOKEN", None)
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 IS_DEV_MODE = os.getenv("DEVELOPMENT", False)
 if not CLIENT_SECRET:
     raise ("Discord token not found from env")

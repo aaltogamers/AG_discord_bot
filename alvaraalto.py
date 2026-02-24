@@ -4,7 +4,6 @@ from discord.ext import tasks
 from src.setup import *
 from src.commands import *
 from src.gamequeue import *
-from src.leaderboard import *
 
 
 @tasks.loop(seconds=1800)

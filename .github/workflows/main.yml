@@ -1,5 +1,7 @@
 name: Build docker image and deploy to Azure Container instance
+
 on:
+  workflow_dispatch:
   push:
     branches:
       - main

@@ -73,5 +73,6 @@ async def whitelist_player(interaction: discord.Interaction, username: str):
 # Command to sync all commands on current server (for development)
 @client.command()
 async def sync(ctx):
+    client.tree.copy_global_to(guild=ctx.guild)
     await client.tree.sync(guild=ctx.guild)
-    await ctx.send(f"Synced to {ctx.guild.name}!")
+    await ctx.send(f"Synced global commands to {ctx.guild.name}!")

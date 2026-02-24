@@ -31,13 +31,12 @@ async def change_status():
 @client.event
 async def on_ready():
     change_status.start()
-    await client.tree.sync()
     print("Bot is ready.")
 
 
 @client.event
 async def on_member_join(member: discord.Member):
-    guild = getGuild()
+    guild = member.guild
     welcome_channel = guild.get_channel(805886391853514812)
     mbed = discord.Embed(
         title="Welcome {}!".format(member.name),

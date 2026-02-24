@@ -16,5 +16,4 @@ Copy .env-example, rename it .env and add Bot Token & other stuff if needed.
 
 ## Deployment
 
-The deployment credentials are in github secrets and on push should automatically deploy a new version to azure
-If you want to test the bot in dev mode, change the actions to use `DISCORD_TOKEN_DEV`, set `development=1` in `environment-variables`-section of the action and change the `name` variable. But remember to take down the new container instance in azure after testing
+The deployment credentials are in Github secrets and on push should automatically deploy a new version to Azure.
